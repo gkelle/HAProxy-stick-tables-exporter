@@ -11,9 +11,10 @@ from prometheus_client.core import REGISTRY
 
 
 class haproxyCollector(object):
-    def __init__(self, stats_socket):
+    def __init__(self, stats_socket, cfg='/etc/haproxy/haproxy.cfg'):
         self.stats_socket = stats_socket
-        self.ha_stats = haproxy_Stats(self.stats_socket)
+        self.cfg = cfg
+        self.ha_stats = haproxy_Stats(self.stats_socket,self.cfg)
 
     def collect_metric(self, metric, metric_collector, stick_tables):
         for table in stick_tables:
@@ -202,10 +203,11 @@ class haproxyCollector(object):
 
 
 class haproxy_Stats(object):
-    def __init__(self, stats_socket):
+    def __init__(self, stats_socket, cfg):
         self.stats_socket = stats_socket
         self.conn_rate = {}
         self.ticks = time.time()
+        self.cfg = cfg
 
     def connect_to_ha_socket(self, cmd):
         """ Connect to HAProxy stats socket """
@@ -317,7 +319,7 @@ class haproxy_Stats(object):
             return self.conn_rate
         else:
             try:
-                with open('/etc/haproxy/haproxy.cfg') as f:
+                with open(self.cfg) as f:
                     config = f.read()
             except FileNotFoundError:
                 logging.fatal('Haproxy config not found')
@@ -352,9 +354,9 @@ class haproxy_Stats(object):
             return self.conn_rate
 
 
-def find_stats_socket():
+def find_stats_socket(cfg='/etc/haproxy/haproxy.cfg'):
     try:
-        with open('/etc/haproxy/haproxy.cfg') as f:
+        with open(cfg) as f:
             config = f.read()
     except FileNotFoundError:
         logging.fatal('Haproxy config not found')
@@ -375,6 +377,9 @@ if __name__ == "__main__":
             description="HAProxy stick table exporter"
         )
     parser.add_argument('-m', '--metrics-port', type=int, default=9366)
+    parser.add_argument('-b', '--bind-address', type=str, default='0.0.0.0')
+    parser.add_argument('-c', '--config', type=str, default='/etc/haproxy/haproxy.cfg')
+    parser.add_argument('-s', '--socket', type=str)
     args = parser.parse_args()
 
     logging.info(
@@ -383,13 +388,13 @@ if __name__ == "__main__":
             )
         )
 
-    stats_socket = find_stats_socket()
+    stats_socket = find_stats_socket(args.config) if args.socket is None else args.socket
     if stats_socket is None:
         logging.fatal('Unable to find stats socket')
         sys.exit(1)
 
-    REGISTRY.register(haproxyCollector(stats_socket))
-    start_http_server(args.metrics_port)
+    REGISTRY.register(haproxyCollector(stats_socket,args.config))
+    start_http_server(args.metrics_port,addr=args.bind_address)
     while True:
         try:
             time.sleep(1)

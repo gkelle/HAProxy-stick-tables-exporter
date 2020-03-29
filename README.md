@@ -21,6 +21,9 @@ $ python3 HAProxy-stick-tables-exporter.py -m 9366
 Name | Description | Default
 -----|-------------|--------
 -m --metrics-port | The port that the metrics exporter will listen on | 9366
+-b --bind-address | The address to bind to | 0.0.0.0
+-c --config | The location of haproxy.cfg | /etc/haproxy/haproxy.cfg
+-s --socket | The location of the haproxy stats socket | None - will be detected by reading haproxy.cfg
 
 
 ## Stats socket
