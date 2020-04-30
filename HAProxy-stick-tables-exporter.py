@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python
 import time
 import socket
 import sys
@@ -218,9 +218,7 @@ class haproxy_Stats(object):
             cmd += ' \n'
             unix_socket.send(cmd.encode())
             file_handle = unix_socket.makefile()
-        except (ConnectionRefusedError,
-                PermissionError,
-                socket.timeout,
+        except ( socket.timeout,
                 OSError
                 ) as e:
             logging.debug(e)
@@ -228,10 +226,7 @@ class haproxy_Stats(object):
         else:
             try:
                 data = file_handle.read().splitlines()
-            except (ConnectionResetError,
-                    ConnectionRefusedError,
-                    PermissionError,
-                    socket.timeout,
+            except ( socket.timeout,
                     OSError
                     ) as e:
                 logging.debug(e)
