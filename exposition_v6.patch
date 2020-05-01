@@ -1,0 +1,10 @@
+--- prometheus_client/exposition.py	2020-04-30 21:33:38.000000000 +0000
++++ prometheus_client/exposition.py.new	2020-04-30 22:39:41.323881174 +0000
+@@ -185,6 +185,7 @@
+     # Enabling daemon threads virtually makes ``_ThreadingSimpleServer`` the
+     # same as Python 3.7's ``ThreadingHTTPServer``.
+     daemon_threads = True
++    address_family = socket.AF_INET6
+ 
+ 
+ def start_http_server(port, addr='', registry=REGISTRY):
